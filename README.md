@@ -28,6 +28,8 @@
 
 ➜ ccache (builds after initial one will be much faster!)
 
+➜ **fengchi** support
+
 ➜ **mountify** support
 
 ➜ baseband guard
