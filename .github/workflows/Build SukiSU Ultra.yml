@@ -1071,15 +1071,15 @@ jobs:
               {"tag": "h3", "children": ["OnePlus 13 (PJZ110) — palaziks kernel"]},
               {"tag": "hr"},
               {"tag": "h4", "children": ["📋 Build Info"]},
-              {"tag": "table", "children": [
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["Device"]}, {"tag": "td", "children": ["OnePlus 13 PJZ110 (CN) / SM8750"]}]},
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["Kernel"]}, {"tag": "td", "children": [f"{e('TG_KERNEL_VERSION')}-android15"]}]},
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["Manager"]}, {"tag": "td", "children": [f"{e('TG_KSU_DISPLAY')} v{e('TG_KSUVER')}"]}]},
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["Suffix"]}, {"tag": "td", "children": [f"-{e('TG_SUFFIX')}"]}]},
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["LTO"]}, {"tag": "td", "children": [e("TG_LTO")]}]},
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["Clang"]}, {"tag": "td", "children": [e("TG_CLANG")]}]},
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["Build #"]}, {"tag": "td", "children": [e("TG_BUILD_NUM")]}]},
-                  {"tag": "tr", "children": [{"tag": "td", "children": ["Time"]}, {"tag": "td", "children": [e("TG_TIME_NOW")]}]},
+              {"tag": "ul", "children": [
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["Device: "]}, "OnePlus 13 PJZ110 (CN) / SM8750"]},
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["Kernel: "]}, f"{e('TG_KERNEL_VERSION')}-android15"]},
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["Manager: "]}, f"{e('TG_KSU_DISPLAY')} v{e('TG_KSUVER')}"]},
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["Suffix: "]}, f"-{e('TG_SUFFIX')}"]},
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["LTO: "]}, e("TG_LTO")]},
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["Clang: "]}, e("TG_CLANG")]},
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["Build #: "]}, e("TG_BUILD_NUM")]},
+                  {"tag": "li", "children": [{"tag": "strong", "children": ["Time: "]}, e("TG_TIME_NOW")]}
               ]},
               {"tag": "hr"},
               {"tag": "h4", "children": ["⚡ Features"]},
@@ -1112,7 +1112,7 @@ jobs:
               {"tag": "ol", "children": [
                   {"tag": "li", "children": ["Flash AnyKernel3 zip via TWRP or KernelFlasher"]},
                   {"tag": "li", "children": ["Install metamodule: mountify / meta-overlayfs / meta-magicmount"]},
-                  {"tag": "li", "children": ["For GKI: patch init_boot with your KSU manager, then fastboot flash init_boot"]},
+                  {"tag": "li", "children": ["I'm not responsible for bricked devices / losen data or other things"]},
               ]},
               {"tag": "hr"},
               {"tag": "p", "children": [
@@ -1155,7 +1155,8 @@ jobs:
 
           CAPTION="✅ <b>SukiSU Ultra Build Successful!</b>
 
-          ⚡ <b>Device:</b> <code>OnePlus 13</code>
+          📱 <b>Device:</b> <code>OnePlus 13</code>
+          ⚡ <b>KSU:</b> <code>SukiSU Ultra/code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
           🔢 <b>Hash:</b> <a href=\"$REPO_URL/commit/${{ github.sha }}\">$COMMIT_HASH</a>
@@ -1176,9 +1177,10 @@ jobs:
         run: |
           DATE=$(date +"%Y-%m-%d %H:%M:%S %Z")
           REPO_URL="https://github.com/${{ github.repository }}"
-          CAPTION="❌ <b>SukiSU Ultra Build Failed!</b>
+          CAPTION="❌ <b>Kernel Build Failed!</b>
 
-          ⚡ <b>Device:</b> <code>OnePlus 13</code>
+          📱 <b>Device:</b> <code>OnePlus 13</code>
+          ⚡ <b>KSU:</b> <code>SukiSU Ultra/code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
           🔢 <b>Hash:</b> <a href=\"$REPO_URL/commit/${{ github.sha }}\">$(echo "${{ github.sha }}" | cut -c1-8)</a>"
