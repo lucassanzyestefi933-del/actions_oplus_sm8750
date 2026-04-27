@@ -905,6 +905,8 @@ jobs:
           export FAKETIME="@2025-05-25 13:00:00"
           export PRELOAD_LIBS="$SO_DIR/libfakestat.so $SO_DIR/libfaketimeMT.so"
 
+          sudo mount -t tmpfs -o size=12G tmpfs kernel_workspace/common/out
+
           # Single defconfig pass, then build Image
           make -j$(nproc --all) LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
             CC="ccache clang" LD="ld.lld" HOSTLD=ld.lld O=out \
@@ -943,7 +945,7 @@ jobs:
         id: create_zip
         run: |
           cd kernel_workspace
-          git clone https://github.com/cctv18/AnyKernel3 --depth=1
+          git clone https://github.com/palazik/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
           cd AnyKernel3
           cp ../common/out/arch/arm64/boot/Image ./Image
@@ -1098,7 +1100,7 @@ jobs:
                   feat(e("TG_SCHED"),  "SchedUtil Optimizations"),
                   feat(e("TG_CPU_OPT"),"Oryon CPU Optimizations"),
                   feat(e("TG_F2FS"),   "F2FS Optimizations"),
-                  feat(e("TG_WG"),     "WireGuard VPN"),
+                  feat(e("TG_WG"),     "WireGuard VPN kernel level support"),
                   feat(e("TG_LRNG"),   "LRNG v59"),
                   feat(e("TG_WLB"),    "Wakelock Blocker"),
                   feat(e("TG_NTSYNC"),      "NTSync (NT sync primitives)"),
