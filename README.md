@@ -3,8 +3,6 @@
     <summary>
       <h1 align="center" style="margin: 0; padding: 0;">⋆. 𐙚˚࿔ palaziks OnePlus Kernel 𝜗𝜚˚⋆</h1>
       <p align="center" style="font-size:12px; margin-top: 5px; margin-bottom: 20px;">
-  <a href="https://github.com/mrcxlinux/actions_oplus_sm8750/tree/english">English Version</a> | 
-  <a href="https://github.com/mrcxlinux/actions_oplus_sm8750/tree/zh">中文版本</a>
 </p>
     </summary>
   </ul>
