@@ -457,6 +457,22 @@ jobs:
             echo "📦 Applying KernelSU SUSFS patch..."
             cd KernelSU
             patch -p1 < ../10_enable_susfs_for_ksu.patch || true
+
+            # Fix duplicate ksu_handle_sys_reboot from patch overlap
+            DISPATCH="supercall/dispatch.c"
+            if [ -f "$DISPATCH" ]; then
+              FIRST=$(grep -n "^int ksu_handle_sys_reboot" "$DISPATCH" | head -1 | cut -d: -f1)
+              SECOND=$(grep -n "^int ksu_handle_sys_reboot" "$DISPATCH" | tail -1 | cut -d: -f1)
+              if [ "$FIRST" != "$SECOND" ]; then
+                echo "Removing duplicate ksu_handle_sys_reboot at line $SECOND..."
+                # Find end of second definition (next blank line after closing brace)
+                END=$(awk "NR>=$SECOND && /^}/{print NR; exit}" "$DISPATCH")
+                sed -i "${SECOND},${END}d" "$DISPATCH"
+                echo "✅ Duplicate removed"
+              else
+                echo "No duplicate found, skipping"
+              fi
+            fi
             cd ..
           fi
 
