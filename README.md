@@ -12,7 +12,7 @@
 <p align="center">
   <a href="#-features"><img src="https://img.shields.io/badge/Features-20+-brightgreen?style=flat-square" /></a>
   <a href="#-build-workflow"><img src="https://img.shields.io/badge/Build-GitHub_Actions-blue?style=flat-square" /></a>
-  <a href="#-memory--scheduler-optimizations"><img src="https://img.shields.io/badge/Optimizations-25_patches-purple?style=flat-square" /></a>
+  <a href="#-memory--scheduler-optimizations"><img src="https://img.shields.io/badge/Optimizations-25+_patches-purple?style=flat-square" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/palazik/actions_oplus_sm8750?style=flat-square" /></a>
 </p>
 
