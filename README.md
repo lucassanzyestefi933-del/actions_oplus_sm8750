@@ -22,6 +22,7 @@
 
 | Property | Value |
 |----------|-------|
+| **Version** | `6.6.138` (upstreamed from 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
 | **Kernel Version** | `Linux 6.6` (GKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
@@ -32,6 +33,9 @@
 ---
 
 ## 📝 Features
+
+### 🔁 Kernel Version
+- ✅ **Upstream** – Upstreaming the OnePlus's official kernel to the Google's newest A15 6.6 kernel
 
 ### 🔐 Security & Hide
 - ✅ **SuSFS** – Enhanced environment hiding (path/mount/kstat spoofing)
