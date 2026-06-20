@@ -472,20 +472,8 @@ jobs:
             sed -i '/diff --git a\/fs\/proc\/task_mmu.c b\/fs\/proc\/task_mmu.c/,/diff --git/ { /diff --git b/!d }' 50_add_susfs_in_gki-android15-6.6.patch
             sed -i '/diff --git a\/fs\/proc\/task_mmu.c b\/fs\/proc\/task_mmu.c/d' 50_add_susfs_in_gki-android15-6.6.patch
 
-            # 2. Find the exact line number of the comment, and target the very next 'if' statement line safely
-            COMMENT_LINE=$(grep -n "Case 4 above" fs/proc/task_mmu.c | cut -d: -f1 | head -n 1)
-            if [ ! -z "$COMMENT_LINE" ]; then
-              # Find the exact 'if' statement line immediately following that comment context
-              TARGET_LINE=$(tail -n +$COMMENT_LINE fs/proc/task_mmu.c | grep -n -m 1 "if (vma->vm_end > last_vma_end)" | cut -d: -f1)
-              ACTUAL_LINE=$((COMMENT_LINE + TARGET_LINE - 1))
-              
-              echo "🎯 Found target block statement at line: $ACTUAL_LINE"
-              
-              # Perform an exact, single-line substitution at that line number
-              sed -i "${ACTUAL_LINE}s/if (vma->vm_end > last_vma_end)/if (vma->vm_end > last_vma_end) {\n#ifdef CONFIG_KSU_SUSFS_SUS_MAP\n\t\t\t\tif (\!vma->vm_file || \!(SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file)))) {\n\t\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n\t\t\t\t}\n#else\n\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n#endif\n\t\t\t}/" fs/proc/task_mmu.c
-            else
-              echo "⚠️ Warning: 'Case 4 above' comment context block not found!"
-            fi
+            # 2. Inject <linux/susfs.h> header right above Case 4 and replace loop statement with lowercase function check
+            sed -i '/\/\* Case 4 above \*\//,/if (vma->vm_end > last_vma_end)/ s/if (vma->vm_end > last_vma_end)/#include <linux\/susfs.h>\n\t\t\tif (vma->vm_end > last_vma_end) {\n#ifdef CONFIG_KSU_SUSFS_SUS_MAP\n\t\t\t\tif (!vma->vm_file || !(susfs_is_inode_sus_map(file_inode(vma->vm_file)))) {\n\t\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n\t\t\t\t}\n#else\n\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n#endif\n\t\t\t}/' fs/proc/task_mmu.c
           fi
           # ──────────────────────────────────────────────────────────────────
 
