@@ -464,19 +464,29 @@ jobs:
 
           cd ./common
 
-          # ── WORKFLOW STRIP AND SED FIX ────────────────────────────────────
+          # ── WORKFLOW STRIP AND SED/AWK FIX ────────────────────────────────
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            echo "🔧 Stripping failing hunk and using custom sed for task_mmu.c..."
+            echo "🔧 Stripping failing hunk and applying block fixes for task_mmu.c..."
             
             # 1. Strip out the specific task_mmu.c file instruction from the patch payload entirely
             sed -i '/diff --git a\/fs\/proc\/task_mmu.c b\/fs\/proc\/task_mmu.c/,/diff --git/ { /diff --git b/!d }' 50_add_susfs_in_gki-android15-6.6.patch
             sed -i '/diff --git a\/fs\/proc\/task_mmu.c b\/fs\/proc\/task_mmu.c/d' 50_add_susfs_in_gki-android15-6.6.patch
 
-            # 2. Inject the header globally at the very top of the file
-            sed -i '1s/^/#include <linux\/susfs.h>\n/' fs/proc/task_mmu.c
+            # 2. Inject the header safely right below SENTINEL_VMA_GATE
+            sed -i '/#define SENTINEL_VMA_GATE/a #include <linux/susfs.h>' fs/proc/task_mmu.c
 
-            # 3. Clean up the loop block without trying to include the header inside the function body
-            sed -i '/\/\* Case 4 above \*\//,/if (vma->vm_end > last_vma_end)/ s/if (vma->vm_end > last_vma_end)/if (vma->vm_end > last_vma_end) {\n#ifdef CONFIG_KSU_SUSFS_SUS_MAP\n\t\t\t\tif (!vma->vm_file || !(susfs_is_inode_sus_map(file_inode(vma->vm_file)))) {\n\t\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n\t\t\t\t}\n#else\n\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n#endif\n\t\t\t}/' fs/proc/task_mmu.c
+            # 3. Cleanly insert the hook logic right before smap_gather_stats using awk
+            awk '
+            /smap_gather_stats\(vma, &mss, last_vma_end\);/ {
+                print "#ifdef CONFIG_KSU_SUSFS_SUS_MAP"
+                print "\t\t\tif (vma->vm_file && SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))) {"
+                print "\t\t\t\tcontinue;"
+                print "\t\t\t}"
+                print "#endif"
+            }
+            { print }
+            ' fs/proc/task_mmu.c > fs/proc/task_mmu.c.tmp && mv fs/proc/task_mmu.c.tmp fs/proc/task_mmu.c
+
           fi
           # ──────────────────────────────────────────────────────────────────
 
