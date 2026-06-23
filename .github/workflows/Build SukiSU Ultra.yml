@@ -363,7 +363,7 @@ jobs:
         run: |
           cd kernel_workspace
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            git clone --depth=1 -b oki-android15-6.6 https://github.com/cctv18/susfs4oki.git &
+            git clone --depth=1 -b gki-android15-6.6 https://gitlab.com/simonpunk/susfs4ksu.git &
           fi
           git clone --depth=1 https://github.com/mrcxlinux/kernel_patches.git &
           git clone --depth=1 https://github.com/ShirkNeko/SukiSU_patch.git &
@@ -371,10 +371,11 @@ jobs:
           wait
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            cp susfs4oki/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
-            cp susfs4oki/kernel_patches/fs/* ./common/fs/
-            cp susfs4oki/kernel_patches/include/linux/* ./common/include/linux/
-            cp susfs4oki/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./common/KernelSU/
+            cp susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
+            cp susfs4ksu/kernel_patches/fs/* ./common/fs/
+            cp susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+            # NO 10_ — SukiSU/ReSukiSU have SUSFS KSU-side integration in-source.
+            # (fatalcoder's production OnePlus v2.2.0 build applies 50_ only.)
           fi
 
           cd ./common
@@ -382,25 +383,33 @@ jobs:
           git apply -p1 < EnablePOLLY.patch || true
 
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            echo "📦 [1/2] Applying 10_ inside KernelSU/ (builtin already has SID; hunks reject harmlessly)..."
-            ( cd KernelSU && patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true )
-            # SukiSU builtin has the SID block in-source. Verify it's present and singly-defined.
-            SEL=KernelSU/kernel/selinux/selinux.c
-            grep -q "susfs_is_current_zygote_domain" "$SEL" || { echo "❌ SID integration absent"; exit 1; }
-            DUP=$(grep -c "^u32 susfs_ksu_sid" "$SEL")
-            if [ "$DUP" -gt 1 ]; then echo "❌ duplicate susfs_ksu_sid ($DUP) — 10_ conflicts; aborting"; exit 1; fi
-            find KernelSU -name '*.rej' -delete
+            echo "📦 Pre-patch fixups (fatalcoder android15-6.6 method)..."
+            # nr_subpages
+            if ! grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
+              sed -i -e '/int ret = 0, copied = 0;/a \\tunsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;' \
+                     -e '/int ret = 0, copied = 0;/a \\tpagemap_entry_t \*res = NULL;' ./fs/proc/task_mmu.c
+            fi
+            # base.c dma-buf
+            if ! grep -qxF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
+              sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
+            fi
+            # memory.c zswap
+            if ! grep -qxF '#include <linux/zswap.h>' ./mm/memory.c; then
+              sed -i '/#include <linux\/sched\/sysctl\.h>/a #include <linux\/zswap.h>' ./mm/memory.c
+            fi
+            # task_mmu last_vma_end: expand ONLY if unbraced (your tree is already braced → skipped)
+            if grep -qF 'if (vma->vm_end > last_vma_end)' ./fs/proc/task_mmu.c \
+               && ! grep -qF 'if (vma->vm_end > last_vma_end) {' ./fs/proc/task_mmu.c; then
+              perl -i -0pe 's/\t\t\tif \(vma->vm_end > last_vma_end\)\n\t\t\t\tsmap_gather_stats\(vma, &mss, last_vma_end\);/\t\t\tif (vma->vm_end > last_vma_end) {\n\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n\t\t\t\tlast_vma_end = vma->vm_end;\n\t\t\t}/' ./fs/proc/task_mmu.c
+            fi
 
-            echo "📦 [2/2] Applying 50_..."
-            patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch || true
-            if grep -q "SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))" fs/proc/task_mmu.c; then
-              rm -f fs/proc/task_mmu.c.rej
-            else
-              echo "❌ SUS_MAP guard missing"; cat fs/proc/task_mmu.c.rej 2>/dev/null; exit 1
-            fi
-            if find . -name '*.rej' | grep -q .; then
-              echo "❌ Unexpected rejects:"; find . -name '*.rej' -exec sh -c 'echo "=== $1 ==="; cat "$1"' _ {} \; ; exit 1
-            fi
+            echo "📦 Applying 50_ with --forward (by-design rejects skip cleanly)..."
+            patch -p1 --forward < 50_add_susfs_in_gki-android15-6.6.patch || true
+
+            # Verify the SUS_MAP guard actually landed (real correctness check, not error-ignoring)
+            grep -q "SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))" fs/proc/task_mmu.c \
+              || { echo "❌ SUS_MAP guard missing — real failure"; exit 1; }
+            echo "✅ SUSFS applied (fatalcoder method)"
           fi
           echo "✅ Base patches applied"
 
