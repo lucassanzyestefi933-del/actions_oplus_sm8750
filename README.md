@@ -3,7 +3,7 @@
     <summary>
       <h1 align="center" style="margin: 0; padding: 0;">⋆ palaziks OnePlus Kernel ⋆</h1>
       <p align="center" style="font-size: 9px; color: #777; margin-top: 5px; margin-bottom: 2px;">
-        <small>Stability-focused GKI 6.6 kernel for OnePlus 13 (SM8750)</small>
+        <small>Stability-focused OGKI (aka OKI) 6.6 kernel for OnePlus 13 (SM8750)</small>
       </p>
       <p align="center" style="font-size:12px; margin-top: 0; margin-bottom: 20px;">
         <i>SukiSU Ultra &amp; KageSU &amp; ReSukiSU &amp; KernelSU &amp; KernelSU Next</i>
@@ -25,12 +25,12 @@
 
 | Property | Value |
 |----------|-------|
-| **Version** | `6.6.142` (upstreamed from 6.6.89) |
+| **Version** | `6.6.139` (upstreamed from 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
-| **Kernel Version** | `Linux 6.6` (GKI Android 15) |
+| **Kernel Version** | `Linux 6.6` (OGKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
 | **ROM Compatibility** | OxygenOS / ColorOS (CN & Global) |
-| **Root Solution** | SukiSU Ultra / KSU Next (Multi-Manager) |
+| **Root Solution** | SukiSU Ultra / KSU Next / KSU / KageSU (Multi-Manager) |
 | **Build System** | GitHub Actions CI/CD (optimized for ~5-6min builds) |
 
 ---
@@ -74,7 +74,7 @@
 - ✅ **Re-Kernel Support** – Enhanced app freezing via NoActive/Freezer *(optional)*
 
 ### 🧩 KernelSU Enhancements
-- ✅ **KPM Support** – Kernel Patch Module for SukiSU Ultra / ReSukiSU *(optional)*
+- ✅ **KPM Support** – Kernel Patch Module for SukiSU Ultra / ReSukiSU / KageSU *(optional)*
 - ✅ **Multi-Manager** – Compatible with multiple KSU variants
 
 ---
@@ -145,7 +145,7 @@
    - 🔘 LTO Type: `thin` (balanced) / `none` (fastest compile) / `full` (max optimization)
    - 🔘 Optional features: KPM, LZ4KD, NTSync, IPv6 NAT, etc.
 5. Click **"Run workflow"** → Wait ~5-6 minutes
-6. Download `AnyKernel3_*.zip` from artifacts or Telegram
+6. Download `AnyKernel3_*.zip` from artifacts or Telegram (if you configured TG bot)
 
 ### Workflow Optimizations
 This CI pipeline includes:
@@ -172,7 +172,7 @@ This CI pipeline includes:
 | Device | Codename | Status |
 |--------|----------|--------|
 | **OnePlus 13** | `PJZ110` (CN) / `OP13` (Global) | ✅ Fully Supported |
-| **OnePlus 13T** | `OP13T` | ⚠️ Untested (may work) |
+| **OnePlus 13T** | `PKX110` | ⚠️ Untested (should work, but not verified) |
 
 > Requires unlocked bootloader + custom recovery (TWRP / KernelFlasher)
 
@@ -182,7 +182,7 @@ This CI pipeline includes:
 
 1. Download the latest `AnyKernel3_*.zip` from [Releases](../../releases) or Actions artifacts
 2. Boot to custom recovery (TWRP / OrangeFox / KernelFlasher)
-3. Flash the ZIP file
+3. Flash the AnyKernel3 ZIP
 4. **(Required)** Install a metamodule for KSU:
    - [mountify](https://github.com/SukiSU-Ultra/mountify)
    - [meta-overlayfs](https://github.com/SukiSU-Ultra/meta-overlayfs)
@@ -223,6 +223,6 @@ This CI pipeline includes:
 </p>
 
 <p align="center">
-  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.142-palaziks-ShiftPorts</code></sub>
+  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.139-palaziks-ShiftPorts</code></sub>
 </p>
 ```
