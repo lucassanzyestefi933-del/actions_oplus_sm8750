@@ -29,7 +29,7 @@
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
 | **Kernel Version** | `Linux 6.6` (OGKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
-| **ROM Compatibility** | OxygenOS / ColorOS (AOSP might work too) |
+| **ROM Compatibility** | OxygenOS / ColorOS (CN & Global) |
 | **Root Solution** | SukiSU Ultra / KSU Next / KSU / KageSU (Multi-Manager) |
 | **Build System** | GitHub Actions CI/CD (optimized for ~5-6min builds) |
 
@@ -38,7 +38,7 @@
 ## 📝 Features
 
 ### 🔁 Kernel Version
-- ✅ **Upstream** – Upstreaming the OnePlus's official kernel to the Google's newest A15 6.6 kernel
+- ✅ **Upstream** – Upstreaming the official OnePlus OGKI kernel to the latest Android 15 GKI 6.6 kernel
 
 ### 🔐 Security & Hide
 - ✅ **SuSFS** – Enhanced environment hiding (path/mount/kstat spoofing)
@@ -53,7 +53,6 @@
 
 ### 🌐 Networking
 - ✅ **TCP BBR + Brutal** – Modern congestion control algorithms
-- ✅ **BBRv3** – Google's latest TCP congestion control, backported to 6.6
 - ✅ **WireGuard** – Kernel-level VPN support
 - ✅ **Full Netfilter** – Conntrack, NAT, hashlimit *(optional)*
 - ✅ **IP_SET + IPv6 NAT** – Advanced firewall + IPv6 masquerade *(optional)*
@@ -117,7 +116,7 @@
 ## 🤖 Compiler & Build Configuration
 
 ### Toolchain
-- **Clang**: ZyCromerZ Clang 19.0.0git (clang-r563880c for AOSP roms) (Oryon-optimized)
+- **Clang**: ZyCromerZ Clang 19.0.0git (Oryon-optimized)
 - **Linker**: LLD 19 with ThinLTO cache in RAM (`/dev/shm`)
 - **CCache**: ECS-enhanced ccache with 10GB cache + aggressive sloppiness
 
@@ -138,7 +137,7 @@
 ### Quick Start
 1. **Fork** this repository (ensure all branches are copied)
 2. Go to **Actions** → Enable workflows
-3. Click **"SukiSU Ultra OP13 Build"** (or any other) → **"Run workflow"**
+3. Click **"KernelSU Next OP13 Build"** → **"Run workflow"**
 4. Configure options:
    - ✅ SuSFS (recommended for hiding)
    - ✅ Fengchi (performance scheduler)
@@ -172,8 +171,8 @@ This CI pipeline includes:
 
 | Device | Codename | Status |
 |--------|----------|--------|
-| **OnePlus 13** | `PJZ110` (CN) / `OP13` (Global) | ✅ Fully Supported |
-| **OnePlus 13T** | `PKX110` | ⚠️ Untested (should work, but not verified) |
+| **OnePlus 13** | `PJZ110` (CN) / `OP13` (Global) | ✅ Fully Supporte |
+| **OnePlus 13T** | `OP13T` |⚠ ⚠️ Untested (should work, but not verified) |
 
 > Requires unlocked bootloader + custom recovery (TWRP / KernelFlasher)
 
@@ -183,7 +182,7 @@ This CI pipeline includes:
 
 1. Download the latest `AnyKernel3_*.zip` from [Releases](../../releases) or Actions artifacts
 2. Boot to custom recovery (TWRP / OrangeFox / KernelFlasher)
-3. Flash the AnyKernel3 ZIP
+3. Flash the ZIP file
 4. **(Required)** Install a metamodule for KSU:
    - [mountify](https://github.com/SukiSU-Ultra/mountify)
    - [meta-overlayfs](https://github.com/SukiSU-Ultra/meta-overlayfs)
@@ -203,12 +202,10 @@ This CI pipeline includes:
 | [cctv18](https://github.com/cctv18) | SuSFS, ccache-ECS, Baseband Guard, public ccache |
 | [vc-teahouse](https://github.com/vc-teahouse) | SukiSU Ultra core & KPM framework |
 | [Numbersf](https://github.com/Numbersf) | Fengchi / HMBIRD scheduler patches |
-| [WildKernels](https://github.com/WildKernels) | 25 memory/scheduler optimization patches, BBRv3 backport patch & workflow optimization |
+| [WildKernels](https://github.com/WildKernels) | 25 memory/scheduler optimization patches & workflow optimization |
 | [ShirkNeko](https://github.com/ShirkNeko) | LZ4KD & ZRAM patches |
 | [ZyCromerZ](https://github.com/ZyCromerZ) | Oryon-optimized Clang 19 toolchain |
-| [bluerabbitsu33](https://github.com/bluerabbitsu33) | AOSP support |
-| [TheWildJames](https://github.com/TheWildJames) | Unicode fix, BBRv3 patch mirror & additional kernel patches |
-| [FatalCoder524](https://github.com/fatalcoder524) | BBRv3 integration method (`CONFIG_TCP_CONG_BBR3` + patch flow) |
+| [TheWildJames](https://github.com/TheWildJames) | Unicode fix & additional kernel patches |
 
 ---
 
@@ -226,6 +223,6 @@ This CI pipeline includes:
 </p>
 
 <p align="center">
-  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.139-palaziks-ShiftPorts</code></sub>
+  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.1439-palaziks-ShiftPorts</code></sub>
 </p>
 ```

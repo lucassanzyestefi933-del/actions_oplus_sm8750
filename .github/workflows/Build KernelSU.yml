@@ -811,6 +811,22 @@ jobs:
             fi
           fi
 
+      # ── BBRv3 (FatalCoder524 method — patch from WildKernels/kernel_patches) ──
+      - name: Apply BBRv3
+        working-directory: kernel_workspace/common
+        run: |
+          echo "::group::Apply BBRv3 patches"
+          echo "CONFIG_TCP_CONG_ADVANCED=y" >> arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_BBR3=y"     >> arch/arm64/configs/gki_defconfig
+          BBRV3_PATCH="../wildkernels_patches/common/bbrv3/0001-net-tcp-backport-BBRv3-to-${ANDROID_VERSION}-${KERNEL_VERSION}.patch"
+          if [ -f "$BBRV3_PATCH" ]; then
+            patch -p1 -F 3 < "$BBRV3_PATCH"
+            echo "✅ BBRv3 patch applied"
+          else
+            echo "::warning::BBRv3 patch not found at $BBRV3_PATCH — skipping"
+          fi
+          echo "::endgroup::"
+
       - name: Configure LTO
         run: |
           cd kernel_workspace
@@ -954,6 +970,7 @@ jobs:
           echo "LZ4: ${{ github.event.inputs.lz4_enable }}" >> ./ak3.log
           echo "LZ4KD: ${{ github.event.inputs.lz4kd_enable }}" >> ./ak3.log
           echo "BBR&Brutal: ${{ github.event.inputs.bbr_enable }}" >> ./ak3.log
+          echo "BBRv3: true (stock)" >> ./ak3.log
           echo "ADIOS: ${{ github.event.inputs.adios_enable }}" >> ./ak3.log
           echo "Re-Kernel: ${{ github.event.inputs.rekernel_enable }}" >> ./ak3.log
           echo "BBG: ${{ github.event.inputs.baseband_guard }}" >> ./ak3.log
@@ -1014,6 +1031,7 @@ jobs:
           export TG_REPO="${{ github.repository }}"
           export TG_SUSFS="${{ github.event.inputs.SUSFS }}"
           export TG_BBR="${{ github.event.inputs.bbr_enable }}"
+          export TG_BBR3="true"
           export TG_ADIOS="${{ github.event.inputs.adios_enable }}"
           export TG_BBG="${{ github.event.inputs.baseband_guard }}"
           export TG_LZ4="${{ github.event.inputs.lz4_enable }}"
@@ -1064,6 +1082,7 @@ jobs:
               {"tag": "ul", "children": [
                   feat(e("TG_SUSFS"),   "SuSFS"),
                   feat("true" if e("TG_BBR") != "false" else "false", f"BBR/Brutal ({e('TG_BBR')})"),
+                  feat(e("TG_BBR3"), "BBRv3 TCP Congestion Control"),
                   feat(e("TG_ADIOS"),   "ADIOS IO Scheduler"),
                   feat(e("TG_BBG"),     "Baseband Guard"),
                   feat(e("TG_LZ4"),     "LZ4 1.10.0 + ZSTD 1.5.7"),
@@ -1226,6 +1245,7 @@ jobs:
           - **ZRAM Writeback:** ${{ github.event.inputs.zram_writeback }}
           - **SchedUil Optimizations:** ${{ github.event.inputs.schedutil_opt }}
           - **BBR/Brutal:** ${{ github.event.inputs.bbr_enable }}
+          - **BBRv3:** true (stock)
           - **ADIOS IO:** ${{ github.event.inputs.adios_enable }}
           - **Baseband Guard:** ${{ github.event.inputs.baseband_guard }}
           - **Fengchi:** ${{ github.event.inputs.fengchi }}

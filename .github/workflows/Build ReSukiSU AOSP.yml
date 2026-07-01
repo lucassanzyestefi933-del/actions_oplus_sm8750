@@ -1,4 +1,4 @@
-name: KernelSU Next OP13 Build
+name: ReSukiSU OP13 AOSP Build
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-6.6.139
@@ -19,6 +19,11 @@ on:
         required: true
         type: boolean
         default: true
+      KPM:
+        description: 'Enable KPM'
+        required: true
+        type: boolean
+        default: false
       lz4_enable:
         description: 'Install LZ4 1.10.0 + ZSTD 1.5.7 Patch'
         required: true
@@ -157,8 +162,8 @@ jobs:
         id: clang-cache
         uses: actions/cache@v4
         with:
-          path: kernel_workspace/zyc-clang
-          key: zyc-clang-19.0.0git-20240723
+          path: kernel_workspace/clang-r563880c
+          key: Linux-aosp-clang-clang-r563880c
 
       - name: Cache build-tools
         id: buildtools-cache
@@ -177,7 +182,7 @@ jobs:
           (sudo nice -n 19 ionice -c 3 rm -rf /usr/share/dotnet_trash /usr/local/lib/android_trash /opt/ghc_trash /usr/lib/jvm_trash) &
 
           rm -rf kernel_workspace/common kernel_workspace/out 2>/dev/null || true
-          mkdir -p kernel_workspace/zyc-clang kernel_workspace/build-tools
+          mkdir -p kernel_workspace/clang-r563880c kernel_workspace/build-tools
           cd kernel_workspace
 
           # apt — stripped to bare minimum, no purge/man-db waste
@@ -194,13 +199,13 @@ jobs:
 
           # Clang — only download if cache missed
           if [ "${{ steps.clang-cache.outputs.cache-hit }}" != "true" ]; then
-            echo "Cache miss — downloading ZyCromerZ Clang 19..."
-            mkdir -p zyc-clang
+            echo "Cache miss — downloading clang-r563880c..."
+            mkdir -p clang-r563880c
             aria2c -x16 -s16 -k1M -j16 --retry-wait=5 --max-tries=10 \
-              -d /dev/shm -o zyc-clang.tar.gz \
-              "https://github.com/ZyCromerZ/Clang/releases/download/19.0.0git-20240723-release/Clang-19.0.0git-20240723.tar.gz"
-            tar -C zyc-clang -zxf /dev/shm/zyc-clang.tar.gz
-            rm -f /dev/shm/zyc-clang.tar.gz
+              -d /dev/shm -o clang-r563880c.tar.gz \
+              "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android16-qpr2-release/clang-r563880c.tar.gz"
+            tar -C clang-r563880c -zxf /dev/shm/clang-r563880c.tar.gz
+            rm -f /dev/shm/clang-r563880c.tar.gz
           else
             echo "Clang restored from cache, skipping download."
           fi &
@@ -331,118 +336,115 @@ jobs:
           echo "Updating atime to achieve cache eviction..."
           find "${{ env.CCACHE_DIR }}" -type f -exec touch -t $(date -d "1 day ago" +%Y%m%d%H%M) {} + || true
               
-      - name: ⚡ Setup KernelSU-Next
+      - name: ⚡ Setup ReSukiSU
         run: |
           cd kernel_workspace/common
-          echo "🛠️ Setting up KernelSU-Next (dev branch)..."
-          curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s dev
-          cd KernelSU-Next
-          KSU_GIT_VERSION=$(git rev-list --count HEAD)
-          export KSUVER=$(expr 10000 + $KSU_GIT_VERSION + 200)
+          echo "🛠️ Setting up ReSukiSU (main)..."
+          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s main
+          cd KernelSU
+          KSU_VERSION_COUNT=$(git rev-list --count HEAD)
+          export KSUVER=$(expr $KSU_VERSION_COUNT + 37185)
           echo "KSUVER=$KSUVER" >> $GITHUB_ENV
-          echo "✅ KernelSU-Next $(git describe --tags 2>/dev/null || git rev-parse --short HEAD)  (ver $KSUVER)"
+          echo "✅ ReSukiSU $(git rev-parse --short HEAD) (ver $KSUVER)"
 
       - name: 🔧 Setup Patches
         run: |
           cd kernel_workspace
-      
-          echo "⬇️ Cloning patch repos..."
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            git clone --depth=1 https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android15-6.6 &
-            git clone --depth=1 https://github.com/WildKernels/kernel_patches.git wild_susfs_fix &
+            git clone --depth=1 -b gki-android15-6.6 https://gitlab.com/simonpunk/susfs4ksu.git &
           fi
           git clone --depth=1 https://github.com/mrcxlinux/kernel_patches.git &
           git clone --depth=1 https://github.com/ShirkNeko/SukiSU_patch.git &
           git clone --depth=1 https://github.com/TheWildJames/kernel_patches.git wildkernels_patches &
           wait
-      
+
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            echo "📝 Staging SUSFS files..."
-            # kernel-side patch + source files → common/
             cp susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
             cp susfs4ksu/kernel_patches/fs/* ./common/fs/
             cp susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-            # KSU-side enable patch → inside KernelSU-Next/
-            cp susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./common/KernelSU-Next/
+            # NO 10_ — SukiSU/ReSukiSU have SUSFS KSU-side integration in-source.
+            # (fatalcoder's production OnePlus v2.2.0 build applies 50_ only.)
           fi
-      
+
           cd ./common
           cp ../kernel_patches/common/EnablePOLLY.patch ./
-          echo "📦 Enabling POLLY support..."
           git apply -p1 < EnablePOLLY.patch || true
-      
+
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
-            FIX_DIR="../wild_susfs_fix/next/susfs_fix_patches/v2.2.0"
-      
-            echo "📦 [1/3] Applying 10_enable_susfs_for_ksu (KSU upstream parts; KSUN-specific errors are EXPECTED)..."
-            ( cd KernelSU-Next && patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true )
-      
-            echo "📦 [2/3] Applying WildKernels KSUN fix patches (v2.2.0)..."
-            for p in \
-              fix_Kbuild.patch \
-              fix_init.c.patch \
-              fix_kernel_umount.c.patch \
-              fix_setuid_hook.c.patch \
-              fix_sucompat.c.patch \
-              fix_supercall.c.patch \
-              ksu_toolkit.patch \
-              overwrite_hook_mode.patch; do
-              if [ -f "$FIX_DIR/$p" ]; then
-                ( cd KernelSU-Next && patch -p1 --forward < "../$FIX_DIR/$p" ) \
-                  && echo "  ✅ $p" || echo "  ⚠️ $p (skipped/conflict)"
-              else
-                echo "  ⚠️ $p not found"
-              fi
-            done
-      
-            echo "📦 [3/3] Applying 50_add_susfs kernel patch..."
-            patch -p1 < 50_add_susfs_in_gki-android15-6.6.patch
+            echo "📦 Pre-patch fixups (fatalcoder android15-6.6 method)..."
+            # nr_subpages
+            if ! grep -qxF $'\tunsigned int nr_subpages = __PAGE_SIZE / PAGE_SIZE;' ./fs/proc/task_mmu.c; then
+              sed -i -e '/int ret = 0, copied = 0;/a \\tunsigned int nr_subpages \= __PAGE_SIZE \/ PAGE_SIZE;' \
+                     -e '/int ret = 0, copied = 0;/a \\tpagemap_entry_t \*res = NULL;' ./fs/proc/task_mmu.c
+            fi
+            # base.c dma-buf
+            if ! grep -qxF '#include <linux/dma-buf.h>' ./fs/proc/base.c; then
+              sed -i '/#include <linux\/cpufreq_times.h>/a #include <linux\/dma-buf.h>' ./fs/proc/base.c
+            fi
+            # memory.c zswap
+            if ! grep -qxF '#include <linux/zswap.h>' ./mm/memory.c; then
+              sed -i '/#include <linux\/sched\/sysctl\.h>/a #include <linux\/zswap.h>' ./mm/memory.c
+            fi
+            # task_mmu last_vma_end: expand ONLY if unbraced (your tree is already braced → skipped)
+            if grep -qF 'if (vma->vm_end > last_vma_end)' ./fs/proc/task_mmu.c \
+               && ! grep -qF 'if (vma->vm_end > last_vma_end) {' ./fs/proc/task_mmu.c; then
+              perl -i -0pe 's/\t\t\tif \(vma->vm_end > last_vma_end\)\n\t\t\t\tsmap_gather_stats\(vma, &mss, last_vma_end\);/\t\t\tif (vma->vm_end > last_vma_end) {\n\t\t\t\tsmap_gather_stats(vma, \&mss, last_vma_end);\n\t\t\t\tlast_vma_end = vma->vm_end;\n\t\t\t}/' ./fs/proc/task_mmu.c
+            fi
+
+            echo "📦 Applying 50_ with --forward (by-design rejects skip cleanly)..."
+            patch -p1 --forward < 50_add_susfs_in_gki-android15-6.6.patch || true
+
+            # Verify the SUS_MAP guard actually landed (real correctness check, not error-ignoring)
+            grep -q "SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file))" fs/proc/task_mmu.c \
+              || { echo "❌ SUS_MAP guard missing — real failure"; exit 1; }
+            echo "✅ SUSFS applied (fatalcoder method)"
           fi
-      
           echo "✅ Base patches applied"
 
       - name: ⚙️ Configure Kernel Options
         run: |
           cd kernel_workspace
           DEFCONFIG="./common/arch/arm64/configs/gki_defconfig"
-      
-          # ── Core KernelSU-Next (dev) ──
-          echo "CONFIG_KSU=y"            >> "$DEFCONFIG"
-          echo "CONFIG_EXT4_FS=y"        >> "$DEFCONFIG"   # KSU depends on EXT4_FS
-          # Inline/manual hooks are supplied by the SUSFS fs/*.c patch +
-          # WildKernels overwrite_hook_mode.patch — no Kconfig toggle needed.
-      
-          echo "CONFIG_TMPFS_XATTR=y"      >> "$DEFCONFIG"
-          echo "CONFIG_TMPFS_POSIX_ACL=y"  >> "$DEFCONFIG"
+          echo "CONFIG_KSU=y" >> "$DEFCONFIG"
+          echo "CONFIG_TMPFS_XATTR=y" >> "$DEFCONFIG"
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> "$DEFCONFIG"
       
           if [[ "${{ github.event.inputs.lz4kd_enable }}" == "true" ]]; then
-            echo "CONFIG_ZSMALLOC=y"     >> "$DEFCONFIG"
+            echo "CONFIG_ZSMALLOC=y" >> "$DEFCONFIG"
             echo "CONFIG_CRYPTO_LZ4HC=y" >> "$DEFCONFIG"
-            echo "CONFIG_CRYPTO_LZ4K=y"  >> "$DEFCONFIG"
+            echo "CONFIG_CRYPTO_LZ4K=y" >> "$DEFCONFIG"
             echo "CONFIG_CRYPTO_LZ4KD=y" >> "$DEFCONFIG"
-            echo "CONFIG_CRYPTO_842=y"   >> "$DEFCONFIG"
+            echo "CONFIG_CRYPTO_842=y" >> "$DEFCONFIG"
+          fi
+      
+          if [ "${{ github.event.inputs.KPM }}" == "true" ]; then
+            echo "📦 Enabling KPM..."
+            echo "CONFIG_KPM=y" >> "$DEFCONFIG"
           fi
       
           echo "CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=y" >> "$DEFCONFIG"
           sed -i 's/check_defconfig//' ./common/build.config.gki
-          echo "CONFIG_HEADERS_INSTALL=n"               >> "$DEFCONFIG"
+          echo "CONFIG_HEADERS_INSTALL=n" >> "$DEFCONFIG"
       
-          echo "CONFIG_LLVM_POLLY=y"                    >> "$DEFCONFIG"
+          echo "CONFIG_LLVM_POLLY=y" >> "$DEFCONFIG"
           echo "CONFIG_LD_DEAD_CODE_DATA_ELIMINATION=y" >> "$DEFCONFIG"
       
+          # ReSukiSU custom version name (@palaziks) via its format-string config:
+          echo 'CONFIG_KSU_FULL_NAME_FORMAT="v%KSU_VERSION%-%COMMIT_SHA%@palaziks"' >> "$DEFCONFIG"
+      
+          # SUSFS on => ReSukiSU auto-selects SuSFS Inline hook. Do NOT set CONFIG_KSU_MANUAL_HOOK.
           if [ "${{ github.event.inputs.SUSFS }}" == "true" ]; then
             echo "📦 Enabling SUSFS features..."
-            echo "CONFIG_KSU_SUSFS=y"                          >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_SUS_PATH=y"                 >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y"                >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y"                >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_SUS_MAP=y"                  >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y"               >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y"              >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y"               >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y"   >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS=y" >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$DEFCONFIG"
             echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$DEFCONFIG"
-            echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y"            >> "$DEFCONFIG"
+            echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$DEFCONFIG"
           fi
 
       - name: Apply LZ4 1.10.0 & ZSTD 1.5.7 Patches
@@ -496,7 +498,7 @@ jobs:
               echo "✅ Fengchi patch applied!"
             else
               sed -i '1iobj-y += hmbird_patch.o' drivers/Makefile
-              wget -q https://github.com/Numbersf/Action-Build/raw/KernelSU/patches/hmbird_patch.patch
+              wget -q https://github.com/Numbersf/Action-Build/raw/SukiSU-Ultra/patches/hmbird_patch.patch
               patch -p1 -F 3 < hmbird_patch.patch
               echo "✅ OGKI to GKI patch applied!"
             fi
@@ -885,8 +887,8 @@ jobs:
         run: |
           WORKDIR="$(pwd)"
           export MAP="-fdebug-prefix-map=${GITHUB_WORKSPACE}=. -fmacro-prefix-map=${GITHUB_WORKSPACE}=. -ffile-prefix-map=${GITHUB_WORKSPACE}=."
-          export PATH="$WORKDIR/kernel_workspace/zyc-clang/bin:$WORKDIR/kernel_workspace/build-tools/linux-x86/bin:$PATH"
-          CLANG_DIR="$WORKDIR/kernel_workspace/zyc-clang/bin"
+          export PATH="$WORKDIR/kernel_workspace/clang-r563880c/bin:$WORKDIR/kernel_workspace/build-tools/linux-x86/bin:$PATH"
+          CLANG_DIR="$WORKDIR/kernel_workspace/clang-r563880c/bin"
           echo "Clang: $($CLANG_DIR/clang --version | head -n 1)"
           echo "LLD:   $($CLANG_DIR/ld.lld --version | head -n 1)"
           pahole --version 2>/dev/null || echo "Pahole: Not Installed"
@@ -948,6 +950,16 @@ jobs:
         with:
           path: ${{ env.LDCACHE_DIR }}
           key: lto-cache-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}
+          
+      - name: 🧩 Patch Kernel Image (KPM)
+        if: inputs.KPM
+        run: |
+          cd /dev/shm/kout/arch/arm64/boot
+          curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.13.0/patch_linux
+          chmod +x patch_linux
+          ./patch_linux
+          rm -f Image
+          mv oImage Image
 
       - name: 🧠 Package AK3 ZIP
         id: create_zip
@@ -961,12 +973,12 @@ jobs:
             echo "Kernel Image not found, build may have failed."
             exit 1
           fi
-          KSU_TYPENAME="KSUNext"
+          KSU_TYPENAME="ReSukiSU"
           if [[ "${{ github.event.inputs.lz4kd_enable }}" == "true" ]]; then
             wget https://raw.githubusercontent.com/$GITHUB_REPOSITORY/refs/heads/$GITHUB_REF_NAME/zram.zip || true
           fi
-          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.139_palaziks-ShiftPorts.zip
-          FULL_VERSION=6.6.139-palaziks-ShiftPorts
+          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.139_palaziks_AOSP-ShiftPorts.zip
+          FULL_VERSION=6.6.139-palaziks_AOSP-ShiftPorts
           zip -r ../$AK3_NAME ./*
           echo "ak3name=$AK3_NAME" >> $GITHUB_OUTPUT
           
@@ -981,6 +993,7 @@ jobs:
           echo "KSU Branch: ${KSU_TYPENAME}" >> ./ak3.log
           echo "KSU Ver: ${KSUVER}" >> ./ak3.log
           echo "SuSFS: ${{ github.event.inputs.SUSFS }}" >> ./ak3.log
+          echo "KPM: ${{ github.event.inputs.KPM }}" >> ./ak3.log
           echo "LZ4: ${{ github.event.inputs.lz4_enable }}" >> ./ak3.log
           echo "LZ4KD: ${{ github.event.inputs.lz4kd_enable }}" >> ./ak3.log
           echo "BBR&Brutal: ${{ github.event.inputs.bbr_enable }}" >> ./ak3.log
@@ -1035,7 +1048,7 @@ jobs:
           TIME_NOW="$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')"
 
           export TG_KERNEL_VERSION="6.6.139"
-          export TG_KSU_DISPLAY="KernelSU Next"
+          export TG_KSU_DISPLAY="ReSukiSU"
           export TG_KSUVER="${{ env.KSUVER }}"
           export TG_SUFFIX="palaziks-ShiftPorts"
           export TG_LTO="${{ github.event.inputs.lto_type }}"
@@ -1044,6 +1057,7 @@ jobs:
           export TG_RUN_URL="$RUN_URL"
           export TG_REPO="${{ github.repository }}"
           export TG_SUSFS="${{ github.event.inputs.SUSFS }}"
+          export TG_KPM="${{ github.event.inputs.KPM }}"
           export TG_BBR="${{ github.event.inputs.bbr_enable }}"
           export TG_BBR3="true"
           export TG_ADIOS="${{ github.event.inputs.adios_enable }}"
@@ -1056,7 +1070,7 @@ jobs:
           export TG_UFIX="${{ github.event.inputs.unicode_fix }}"
           export TG_ZWB="${{ github.event.inputs.zram_writeback }}"
           export TG_SCHED="${{ github.event.inputs.schedutil_opt }}"
-          export TG_CLANG="ZyCromerZ-19"
+          export TG_CLANG="clang-r563880c"
           export TG_CPU_OPT="${{ github.event.inputs.cpu_opt }}"
           export TG_F2FS="${{ github.event.inputs.f2fs_opt }}"
           export TG_WG="${{ github.event.inputs.wireguard }}"
@@ -1095,6 +1109,7 @@ jobs:
               {"tag": "h4", "children": ["⚡ Features"]},
               {"tag": "ul", "children": [
                   feat(e("TG_SUSFS"),   "SuSFS"),
+                  feat("true" if e("TG_KPM") != "false" else "false", f"KPM ({e('TG_KPM')})"),
                   feat("true" if e("TG_BBR") != "false" else "false", f"BBR/Brutal ({e('TG_BBR')})"),
                   feat(e("TG_BBR3"), "BBRv3 TCP Congestion Control"),
                   feat(e("TG_ADIOS"),   "ADIOS IO Scheduler"),
@@ -1166,7 +1181,7 @@ jobs:
           CAPTION="✅ <b>Kernel Build Successful!</b>
 
           📱 <b>Device:</b> <code>OnePlus 13</code>
-          ⚡ <b>KSU:</b> <code>KernelSU Next</code>
+          ⚡ <b>KSU:</b> <code>ReSukiSU</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
           🔢 <b>Hash:</b> <a href=\"$REPO_URL/commit/${{ github.sha }}\">$COMMIT_HASH</a>
@@ -1190,7 +1205,7 @@ jobs:
           CAPTION="❌ <b>Kernel Build Failed!</b>
 
           📱 <b>Device:</b> <code>OnePlus 13</code>
-          ⚡ <b>KSU:</b> <code>KernelSU Next</code>
+          ⚡ <b>KSU:</b> <code>ReSukiSU</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
           🔢 <b>Hash:</b> <a href=\"$REPO_URL/commit/${{ github.sha }}\">$(echo "${{ github.sha }}" | cut -c1-8)</a>"
@@ -1233,7 +1248,7 @@ jobs:
           echo "TIME_FORM=$TIME_FORM" >> $GITHUB_ENV
           TAG_HEAD="OPPO-OPlus-Realme-build"
           echo "TAG_HEAD=$TAG_HEAD" >> $GITHUB_ENV
-          KSU_TYPENAME="KernelSU-Next"
+          KSU_TYPENAME="ReSukiSU"
           echo "KSU_TYPENAME=$KSU_TYPENAME" >> $GITHUB_ENV
           
       - name: Create Release
@@ -1243,10 +1258,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 OnePlus 13 KernelSU Next SM8750 Generic Kernel
+          ### 📱 OnePlus 13 ReSukiSU SM8750 AOSP Clang
           - **Kernel Version:** ${{ env.FULL_VERSION }}
           - **Build Time:** ${{ env.TIME_FORM }}
-          - **KSU Branch:** KernelSU Next
+          - **KSU Branch:** ReSukiSU
           - **SuSFS:** ${{ github.event.inputs.SUSFS }}
           - **NTSync:** ${{ github.event.inputs.ntsync_enable }}
           - **Droidspaces:** ${{ github.event.inputs.droidspaces_enable }}
@@ -1254,6 +1269,7 @@ jobs:
           - **TTL Target:** ${{ github.event.inputs.ttl_enable }}
           - **Memory & Scheduler Optimizations:** ${{ github.event.inputs.mem_opt_patches }}
           - **Multi-Manager:** true
+          - **KPM:** ${{ github.event.inputs.KPM }}
           - **LZ4:** ${{ github.event.inputs.lz4_enable }}
           - **LZ4KD:** ${{ github.event.inputs.lz4kd_enable }}
           - **ZRAM Writeback:** ${{ github.event.inputs.zram_writeback }}

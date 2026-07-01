@@ -1,4 +1,4 @@
-name: KernelSU Next OP13 Build
+name: KernelSU Next OP13 AOSP Build
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-6.6.139
@@ -157,8 +157,8 @@ jobs:
         id: clang-cache
         uses: actions/cache@v4
         with:
-          path: kernel_workspace/zyc-clang
-          key: zyc-clang-19.0.0git-20240723
+          path: kernel_workspace/clang-r563880c
+          key: Linux-aosp-clang-clang-r563880c
 
       - name: Cache build-tools
         id: buildtools-cache
@@ -177,7 +177,7 @@ jobs:
           (sudo nice -n 19 ionice -c 3 rm -rf /usr/share/dotnet_trash /usr/local/lib/android_trash /opt/ghc_trash /usr/lib/jvm_trash) &
 
           rm -rf kernel_workspace/common kernel_workspace/out 2>/dev/null || true
-          mkdir -p kernel_workspace/zyc-clang kernel_workspace/build-tools
+          mkdir -p kernel_workspace/clang-r563880c kernel_workspace/build-tools
           cd kernel_workspace
 
           # apt — stripped to bare minimum, no purge/man-db waste
@@ -194,13 +194,13 @@ jobs:
 
           # Clang — only download if cache missed
           if [ "${{ steps.clang-cache.outputs.cache-hit }}" != "true" ]; then
-            echo "Cache miss — downloading ZyCromerZ Clang 19..."
-            mkdir -p zyc-clang
+            echo "Cache miss — downloading clang-r563880c..."
+            mkdir -p clang-r563880c
             aria2c -x16 -s16 -k1M -j16 --retry-wait=5 --max-tries=10 \
-              -d /dev/shm -o zyc-clang.tar.gz \
-              "https://github.com/ZyCromerZ/Clang/releases/download/19.0.0git-20240723-release/Clang-19.0.0git-20240723.tar.gz"
-            tar -C zyc-clang -zxf /dev/shm/zyc-clang.tar.gz
-            rm -f /dev/shm/zyc-clang.tar.gz
+              -d /dev/shm -o clang-r563880c.tar.gz \
+              "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android16-qpr2-release/clang-r563880c.tar.gz"
+            tar -C clang-r563880c -zxf /dev/shm/clang-r563880c.tar.gz
+            rm -f /dev/shm/clang-r563880c.tar.gz
           else
             echo "Clang restored from cache, skipping download."
           fi &
@@ -885,8 +885,8 @@ jobs:
         run: |
           WORKDIR="$(pwd)"
           export MAP="-fdebug-prefix-map=${GITHUB_WORKSPACE}=. -fmacro-prefix-map=${GITHUB_WORKSPACE}=. -ffile-prefix-map=${GITHUB_WORKSPACE}=."
-          export PATH="$WORKDIR/kernel_workspace/zyc-clang/bin:$WORKDIR/kernel_workspace/build-tools/linux-x86/bin:$PATH"
-          CLANG_DIR="$WORKDIR/kernel_workspace/zyc-clang/bin"
+          export PATH="$WORKDIR/kernel_workspace/clang-r563880c/bin:$WORKDIR/kernel_workspace/build-tools/linux-x86/bin:$PATH"
+          CLANG_DIR="$WORKDIR/kernel_workspace/clang-r563880c/bin"
           echo "Clang: $($CLANG_DIR/clang --version | head -n 1)"
           echo "LLD:   $($CLANG_DIR/ld.lld --version | head -n 1)"
           pahole --version 2>/dev/null || echo "Pahole: Not Installed"
@@ -965,8 +965,8 @@ jobs:
           if [[ "${{ github.event.inputs.lz4kd_enable }}" == "true" ]]; then
             wget https://raw.githubusercontent.com/$GITHUB_REPOSITORY/refs/heads/$GITHUB_REF_NAME/zram.zip || true
           fi
-          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.139_palaziks-ShiftPorts.zip
-          FULL_VERSION=6.6.139-palaziks-ShiftPorts
+          AK3_NAME=AnyKernel3_${KSU_TYPENAME}_${{ env.KSUVER }}_6.6.139_palaziks_AOSP-ShiftPorts.zip
+          FULL_VERSION=6.6.139-palaziks_AOSP-ShiftPorts
           zip -r ../$AK3_NAME ./*
           echo "ak3name=$AK3_NAME" >> $GITHUB_OUTPUT
           
@@ -1056,7 +1056,7 @@ jobs:
           export TG_UFIX="${{ github.event.inputs.unicode_fix }}"
           export TG_ZWB="${{ github.event.inputs.zram_writeback }}"
           export TG_SCHED="${{ github.event.inputs.schedutil_opt }}"
-          export TG_CLANG="ZyCromerZ-19"
+          export TG_CLANG="clang-r563880c"
           export TG_CPU_OPT="${{ github.event.inputs.cpu_opt }}"
           export TG_F2FS="${{ github.event.inputs.f2fs_opt }}"
           export TG_WG="${{ github.event.inputs.wireguard }}"
@@ -1243,7 +1243,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat << 'EOF' > release_notes.md
-          ### 📱 OnePlus 13 KernelSU Next SM8750 Generic Kernel
+          ### 📱 OnePlus 13 KernelSU Next SM8750 AOSP Clang
           - **Kernel Version:** ${{ env.FULL_VERSION }}
           - **Build Time:** ${{ env.TIME_FORM }}
           - **KSU Branch:** KernelSU Next
