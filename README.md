@@ -53,6 +53,7 @@
 
 ### 🌐 Networking
 - ✅ **TCP BBR + Brutal** – Modern congestion control algorithms
+- ✅ **BBRv3** – Google's latest TCP congestion control, backported to 6.6 (WildKernels patch, FatalCoder524 integration method)
 - ✅ **WireGuard** – Kernel-level VPN support
 - ✅ **Full Netfilter** – Conntrack, NAT, hashlimit *(optional)*
 - ✅ **IP_SET + IPv6 NAT** – Advanced firewall + IPv6 masquerade *(optional)*
@@ -202,11 +203,12 @@ This CI pipeline includes:
 | [cctv18](https://github.com/cctv18) | SuSFS, ccache-ECS, Baseband Guard, public ccache |
 | [vc-teahouse](https://github.com/vc-teahouse) | SukiSU Ultra core & KPM framework |
 | [Numbersf](https://github.com/Numbersf) | Fengchi / HMBIRD scheduler patches |
-| [WildKernels](https://github.com/WildKernels) | 25 memory/scheduler optimization patches & workflow optimization |
+| [WildKernels](https://github.com/WildKernels) | 25 memory/scheduler optimization patches, BBRv3 backport patch & workflow optimization |
 | [ShirkNeko](https://github.com/ShirkNeko) | LZ4KD & ZRAM patches |
 | [ZyCromerZ](https://github.com/ZyCromerZ) | Oryon-optimized Clang 19 toolchain |
 | [bluerabbitsu33](https://github.com/bluerabbitsu33) | AOSP support |
-| [TheWildJames](https://github.com/TheWildJames) | Unicode fix & additional kernel patches |
+| [TheWildJames](https://github.com/TheWildJames) | Unicode fix, BBRv3 patch mirror & additional kernel patches |
+| [FatalCoder524](https://github.com/fatalcoder524) | BBRv3 integration method (`CONFIG_TCP_CONG_BBR3` + patch flow) |
 
 ---
 
