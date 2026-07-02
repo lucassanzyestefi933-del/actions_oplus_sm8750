@@ -62,10 +62,11 @@
 ### 🔐 Security & Hide
 - ✅ **SuSFS** – Enhanced environment hiding (path/mount/kstat spoofing)
 - ✅ **Baseband Guard** – Anti-brick modem protection
-- ✅ **Unicode Bypass Fix** – Path traversal protection
+- ✅ **Unicode Bypass Fix** – Path traversal protection *(always on)*
 
 ### 🚀 Performance & Scheduler
 - ✅ **Fengchi / HMBIRD** – Advanced CPU scheduler optimizations for SM8750
+- ✅ **BORE Scheduler** – Burst-Oriented Response Enhancer (EEVDF) for snappier interactivity *(optional, off by default)*
 - ✅ **ADIOS IO Scheduler** – Improved read/write performance
 - ✅ **SchedUtil Optimizations** – Better CPU governor responsiveness *(optional)*
 - ✅ **Oryon CPU Tuning** – `-mcpu=oryon-1` flags for SM8750
@@ -233,6 +234,8 @@ This CI pipeline includes:
 | [linx3141](https://github.com/linx3141) | AOSP support |
 | [TheWildJames](https://github.com/TheWildJames) | Unicode fix, BBRv3 patch mirror & additional kernel patches |
 | [FatalCoder524](https://github.com/fatalcoder524) | BBRv3 integration method (`CONFIG_TCP_CONG_BBR3` + patch flow) |
+| [brokestar233](https://github.com/brokestar233) | BORE scheduler integration for OnePlus SM8750 (source patch) |
+| [firelzrd](https://github.com/firelzrd) | BORE (Burst-Oriented Response Enhancer) CPU scheduler |
 
 ---
 
