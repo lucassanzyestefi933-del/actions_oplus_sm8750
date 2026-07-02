@@ -1133,6 +1133,9 @@ jobs:
                   feat(e("TG_MEM_OPT"),     "Memory & Scheduler Optimizations"),
               ]},
               {"tag": "hr"},
+              {"tag": "h4", "children": ["🎯 ROM Compatibility"]},
+              {"tag": "p", "children": ["⚠️ Built with ZyCromerZ Clang for ColorOS / OxygenOS ONLY. To flash on an AOSP-based ROM, build the matching \"... AOSP\" workflow yourself — AOSP Clang builds are for AOSP ROMs only."]},
+              {"tag": "hr"},
               {"tag": "h4", "children": ["📥 Installation"]},
               {"tag": "ol", "children": [
                   {"tag": "li", "children": ["Flash AnyKernel3 zip via TWRP or KernelFlasher"]},
@@ -1259,6 +1262,8 @@ jobs:
         run: |
           cat << 'EOF' > release_notes.md
           ### 📱 OnePlus 13 ReSukiSU SM8750 Generic Kernel
+          > ⚠️ **ROM Compatibility:** Built with **ZyCromerZ Clang** for **ColorOS / OxygenOS** only. To flash on an **AOSP**-based ROM, run the matching `Build <manager> AOSP` workflow yourself (AOSP Clang builds are for AOSP ROMs only).
+
           - **Kernel Version:** ${{ env.FULL_VERSION }}
           - **Build Time:** ${{ env.TIME_FORM }}
           - **KSU Branch:** ReSukiSU

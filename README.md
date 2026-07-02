@@ -29,9 +29,28 @@
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
 | **Kernel Version** | `Linux 6.6` (OGKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
-| **ROM Compatibility** | OxygenOS / ColorOS (AOSP might work too) |
+| **ROM Compatibility** | OxygenOS / ColorOS **or** AOSP — one build per ROM type ([see below](#-rom-compatibility)) |
 | **Root Solution** | SukiSU Ultra / KSU Next / KSU / KageSU (Multi-Manager) |
 | **Build System** | GitHub Actions CI/CD (optimized for ~5-6min builds) |
+
+---
+
+## 🎯 ROM Compatibility
+
+> [!IMPORTANT]
+> A single build **cannot** cover both ColorOS/OxygenOS and AOSP — the toolchain decides the target ROM. Pick the workflow that matches the ROM you run.
+
+| Your ROM | Workflow to run | Toolchain |
+|----------|-----------------|-----------|
+| **ColorOS / OxygenOS** | `Build <manager>.yml` (normal) | ZyCromerZ Clang |
+| **AOSP-based** (LineageOS, crDroid, etc.) | `Build <manager> AOSP.yml` | AOSP Clang |
+
+- **ZyCromerZ Clang builds → ColorOS / OxygenOS only.**
+- **AOSP Clang builds → AOSP ROMs only.**
+- Flashing the wrong variant on your ROM will not boot.
+
+> [!NOTE]
+> **GitHub Releases only ship the ColorOS / OxygenOS (normal) builds.** If you're on an AOSP ROM, there is no prebuilt release — fork the repo and run the matching **`Build <manager> AOSP`** workflow yourself under **Actions**, then grab the ZIP from the artifacts (or your Telegram bot).
 
 ---
 
@@ -117,7 +136,7 @@
 ## 🤖 Compiler & Build Configuration
 
 ### Toolchain
-- **Clang**: ZyCromerZ Clang 19.0.0git (clang-r563880c for AOSP roms) (Oryon-optimized)
+- **Clang**: ZyCromerZ Clang 19.0.0git, Oryon-optimized (ColorOS/OxygenOS) — or AOSP Clang `clang-r563880c` for AOSP builds
 - **Linker**: LLD 19 with ThinLTO cache in RAM (`/dev/shm`)
 - **CCache**: ECS-enhanced ccache with 10GB cache + aggressive sloppiness
 
@@ -138,7 +157,10 @@
 ### Quick Start
 1. **Fork** this repository (ensure all branches are copied)
 2. Go to **Actions** → Enable workflows
-3. Click **"SukiSU Ultra OP13 Build"** (or any other) → **"Run workflow"**
+3. Pick the workflow for your **root manager _and_ ROM**:
+   - ColorOS / OxygenOS → **`Build <manager>`** (e.g. *"SukiSU Ultra OP13 Build"*)
+   - AOSP-based ROMs → **`Build <manager> AOSP`**
+   - Then hit **"Run workflow"** ([why two variants?](#-rom-compatibility))
 4. Configure options:
    - ✅ SuSFS (recommended for hiding)
    - ✅ Fengchi (performance scheduler)
@@ -181,7 +203,9 @@ This CI pipeline includes:
 
 ## 📦 Installation
 
-1. Download the latest `AnyKernel3_*.zip` from [Releases](../../releases) or Actions artifacts
+1. Download the latest `AnyKernel3_*.zip`:
+   - **ColorOS / OxygenOS** → [Releases](../../releases) or Actions artifacts
+   - **AOSP** → Actions artifacts of your own **`Build <manager> AOSP`** run (Releases are COS/OOS only — see [ROM Compatibility](#-rom-compatibility))
 2. Boot to custom recovery (TWRP / OrangeFox / KernelFlasher)
 3. Flash the AnyKernel3 ZIP
 4. **(Required)** Install a metamodule for KSU:
@@ -206,7 +230,7 @@ This CI pipeline includes:
 | [WildKernels](https://github.com/WildKernels) | 25 memory/scheduler optimization patches, BBRv3 backport patch & workflow optimization |
 | [ShirkNeko](https://github.com/ShirkNeko) | LZ4KD & ZRAM patches |
 | [ZyCromerZ](https://github.com/ZyCromerZ) | Oryon-optimized Clang 19 toolchain |
-| [bluerabbitsu33](https://github.com/bluerabbitsu33) | AOSP support |
+| [linx3141](https://github.com/linx3141) | AOSP support |
 | [TheWildJames](https://github.com/TheWildJames) | Unicode fix, BBRv3 patch mirror & additional kernel patches |
 | [FatalCoder524](https://github.com/fatalcoder524) | BBRv3 integration method (`CONFIG_TCP_CONG_BBR3` + patch flow) |
 
