@@ -348,10 +348,10 @@ jobs:
         run: |
           cd kernel_workspace/common
           echo "🛠️ Setting up KageSU (rework)..."
-          curl -LSs "https://raw.githubusercontent.com/KageKSU/KageSU/rework/kernel/setup.sh" | bash -s rework
+          curl -LSs "https://raw.githubusercontent.com/KageKSU/KageSU/rework-miuix/kernel/setup.sh" | bash -s rework-miuix
           cd KernelSU
           KSU_VERSION_COUNT=$(git rev-list --count HEAD)
-          export KSUVER=$(expr $KSU_VERSION_COUNT + 40000)
+          export KSUVER=$(expr $KSU_VERSION_COUNT + 30700)
           echo "KSUVER=$KSUVER" >> $GITHUB_ENV
       
           # Custom version name (@palaziks) — KageSU builds KSU_VERSION_FULL in kernel/Makefile
