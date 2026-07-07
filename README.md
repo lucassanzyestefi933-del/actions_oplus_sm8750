@@ -196,7 +196,9 @@ This CI pipeline includes:
 | Device | Codename | Status |
 |--------|----------|--------|
 | **OnePlus 13** | `PJZ110` (CN) / `OP13` (Global) | ✅ Fully Supported |
-| **OnePlus 13T** | `PKX110` | ⚠️ Untested (should work, but not verified) |
+| **OnePlus 13T** | `PKX110` | ✅ Fully Supported |
+| **OnePlus Pad 3** | `OPD2415` | ✅ Fully Supported |
+| **OnePlus Pad 2 Pro** | `OPD2413` | ✅ Fully Supported | 
 
 > Requires unlocked bootloader + custom recovery (TWRP / KernelFlasher)
 
