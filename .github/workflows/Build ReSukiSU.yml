@@ -210,10 +210,10 @@ jobs:
             echo "Cache miss — downloading ZyCromerZ Clang 19..."
             mkdir -p zyc-clang
             aria2c -x16 -s16 -k1M -j16 --retry-wait=5 --max-tries=10 \
-              -d /dev/shm -o zyc-clang.tar.gz \
+              -d /tmp -o zyc-clang.tar.gz \
               "https://github.com/ZyCromerZ/Clang/releases/download/19.0.0git-20240723-release/Clang-19.0.0git-20240723.tar.gz"
-            tar -C zyc-clang -zxf /dev/shm/zyc-clang.tar.gz
-            rm -f /dev/shm/zyc-clang.tar.gz
+            tar -C zyc-clang -zxf /tmp/zyc-clang.tar.gz
+            rm -f /tmp/zyc-clang.tar.gz
           else
             echo "Clang restored from cache, skipping download."
           fi &
@@ -275,8 +275,8 @@ jobs:
       - name: Configure CCache Directory
         run: |
           echo "CCACHE_DIR=$HOME/.ccache_6.6.139" >> $GITHUB_ENV
-          echo "LDCACHE_DIR=/dev/shm/ldcache_6.6.139" >> $GITHUB_ENV
-          mkdir -p /dev/shm/ldcache_6.6.139
+          echo "LDCACHE_DIR=$GITHUB_WORKSPACE/ldcache_6.6.139" >> $GITHUB_ENV
+          mkdir -p $GITHUB_WORKSPACE/ldcache_6.6.139
           echo "CCACHE_MAXSIZE=10G" >> $GITHUB_ENV
           echo "Current Disk Space:"
           df -h
@@ -915,14 +915,14 @@ jobs:
           export CCACHE_IS_KERNEL_COMPILING=true
 
           # RAM disk for build output (15GB RAM available, safe to use)
-          mkdir -p /dev/shm/kout
-          mkdir -p /dev/shm/ldcache_6.6.139
+          mkdir -p $GITHUB_WORKSPACE/kout
+          mkdir -p $GITHUB_WORKSPACE/ldcache_6.6.139
 
           cd kernel_workspace/common
 
           # LTO thin cache wrapper pointing to RAM disk
           echo '#!/bin/bash' > ld-wrapper
-          echo 'ld.lld "$@" --thinlto-cache-dir=/dev/shm/ldcache_6.6.139 --thinlto-jobs=$(($(nproc --all) / 2))' >> ld-wrapper
+          echo 'ld.lld "$@" --thinlto-cache-dir=$GITHUB_WORKSPACE/ldcache_6.6.139 --thinlto-jobs=$(($(nproc --all) / 2))' >> ld-wrapper
           chmod +x ld-wrapper
 
           wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/libfakestat.so || true
@@ -936,14 +936,14 @@ jobs:
           # defconfig pass — output to RAM disk
           make -j$(nproc --all) LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
             CC="ccache clang" LD="$(pwd)/ld-wrapper" HOSTLD="$(pwd)/ld-wrapper" \
-            O=/dev/shm/kout \
+            O=$GITHUB_WORKSPACE/kout \
             KCFLAGS="-O2 -pipe -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option" \
             gki_defconfig
 
           # Image build — output to RAM disk
           make -j$(nproc --all) LLVM=1 LLVM_IAS=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
             CC="ccache clang" LD="$(pwd)/ld-wrapper" HOSTLD="$(pwd)/ld-wrapper" \
-            O=/dev/shm/kout \
+            O=$GITHUB_WORKSPACE/kout \
             KCFLAGS="-O2 -pipe -Wno-error -Wno-implicit-function-declaration -Wno-implicit-int -Wno-default-const-init-var-unsafe -Wno-format -Wno-unknown-warning-option ${EXTRA_CFLAGS:-} ${MAP}" \
             Image
 
@@ -971,7 +971,7 @@ jobs:
       - name: 🧩 Patch Kernel Image (KPM)
         if: inputs.KPM
         run: |
-          cd /dev/shm/kout/arch/arm64/boot
+          cd $GITHUB_WORKSPACE/kout/arch/arm64/boot
           curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.13.0/patch_linux
           chmod +x patch_linux
           ./patch_linux
@@ -985,7 +985,7 @@ jobs:
           git clone https://github.com/palazik/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
           cd AnyKernel3
-          cp /dev/shm/kout/arch/arm64/boot/Image ./Image
+          cp $GITHUB_WORKSPACE/kout/arch/arm64/boot/Image ./Image
           if [[ ! -f ./Image ]]; then
             echo "Kernel Image not found, build may have failed."
             exit 1
@@ -1034,7 +1034,7 @@ jobs:
 
       - name: 📝 Make ZRAM module
         run: |
-          ZRAM_KO=$(find /dev/shm/kout -name "zram.ko" | head -1)
+          ZRAM_KO=$(find $GITHUB_WORKSPACE/kout -name "zram.ko" | head -1)
           if [ -z "$ZRAM_KO" ]; then
             echo "⚠️ zram.ko not found, skipping"
             exit 0
