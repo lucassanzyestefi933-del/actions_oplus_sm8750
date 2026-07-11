@@ -25,7 +25,7 @@
 
 | Property | Value |
 |----------|-------|
-| **Version** | `6.6.139` (upstreamed from 6.6.89) |
+| **Version** | `6.6.141` (upstreamed from 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
 | **Kernel Version** | `Linux 6.6` (OGKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
@@ -258,6 +258,6 @@ This CI pipeline includes:
 </p>
 
 <p align="center">
-  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.139-palaziks-ShiftPorts</code></sub>
+  <sub>Built with ❤️ by palaziks • Kernel version: <code>6.6.141-palaziks-ShiftPorts</code></sub>
 </p>
 ```
