@@ -25,12 +25,11 @@
 
 | Property | Value |
 |----------|-------|
-| **Version** | `6.6.141` (upstreamed from 6.6.89) |
+| **Kernel Version** | `6.6.141` (upstreamed from OGKI 6.6.89) |
 | **Chipset** | `SM8750` \| Snapdragon 8 Elite \| sun |
-| **Kernel Version** | `Linux 6.6` (OGKI Android 15) |
 | **Android Version** | `15 VanillaIceCream` (compatible with later versions) |
 | **ROM Compatibility** | OxygenOS / ColorOS **or** AOSP — one build per ROM type ([see below](#-rom-compatibility)) |
-| **Root Solution** | SukiSU Ultra / KSU Next / KSU / ReSukiSU (Multi-Manager) |
+| **Root Solution** | SukiSU Ultra / KSU Next / KSU / ReSukiSU |
 | **Build System** | GitHub Actions CI/CD (optimized for ~5-6min builds) |
 
 ---
