@@ -1,4 +1,4 @@
-name: 6.12.23 TEST OP13 Build
+name: 6.12.23 TEST AOSP OP13 Build
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-6.12.23
@@ -86,15 +86,15 @@ jobs:
           mv android_kernel_common_oneplus_sm8750-* common &&
           rm -f common.zip &
 
-          # Clang — only download if cache missed
+           # Clang — only download if cache missed
           if [ "${{ steps.clang-cache.outputs.cache-hit }}" != "true" ]; then
-            echo "Cache miss — downloading ZyCromerZ Clang 19..."
-            mkdir -p zyc-clang
+            echo "Cache miss — downloading clang-r563880c..."
+            mkdir -p clang-r563880c
             aria2c -x16 -s16 -k1M -j16 --retry-wait=5 --max-tries=10 \
-              -d /tmp -o zyc-clang.tar.gz \
-              "https://github.com/ZyCromerZ/Clang/releases/download/19.0.0git-20240723-release/Clang-19.0.0git-20240723.tar.gz"
-            tar -C zyc-clang -zxf /tmp/zyc-clang.tar.gz
-            rm -f /tmp/zyc-clang.tar.gz
+              -d /tmp -o clang-r563880c.tar.gz \
+              "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android16-qpr2-release/clang-r563880c.tar.gz"
+            tar -C clang-r563880c -zxf /tmp/clang-r563880c.tar.gz
+            rm -f /tmp/clang-r563880c.tar.gz
           else
             echo "Clang restored from cache, skipping download."
           fi &
@@ -582,7 +582,7 @@ jobs:
 
           CAPTION="✅ <b>Kernel Build Successful!</b>
 
-          📱 <b>Device:</b> <code>OnePlus 13</code>
+          📱 <b>Device:</b> <code>OnePlus 13 AOSP</code>
           ⚡ <b>KSU:</b> <code>ReSukiSU</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
@@ -606,7 +606,7 @@ jobs:
           REPO_URL="https://github.com/${{ github.repository }}"
           CAPTION="❌ <b>Kernel Build Failed!</b>
 
-          📱 <b>Device:</b> <code>OnePlus 13</code>
+          📱 <b>Device:</b> <code>OnePlus 13 AOSP</code>
           ⚡ <b>KSU:</b> <code>ReSukiSU</code>
           📅 <b>Date:</b> $DATE
           📝 <b>Commit:</b> <code>$COMMIT_MSG</code>
